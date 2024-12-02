@@ -1,5 +1,8 @@
-import { db } from "../../firebaseConfig.js";
+import { db, auth } from "../../firebaseConfig.js";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 class UserController {
   // register
@@ -35,10 +38,17 @@ class UserController {
 
     try {
       const hashedPassword = await bcrypt.hash(password, 10);
+
+      const userRecord = await auth.createUser({
+        email,
+        password: hashedPassword,
+      });
+
       await db.collection("users").add({
         name,
         email,
         password: hashedPassword,
+        firebaseUid: userRecord.uid,
       });
 
       return res
@@ -89,9 +99,35 @@ class UserController {
       return res.status(500).json({ error: "Usuário não encontrado!" });
     }
   }
-
   // change password
-  async forgotPassword(req, res) {}
+  async forgotPassword(req, res) {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "E-mail é obrigatório!" });
+    }
+
+    try {
+      const userExistsInAuth = await auth.getUserByEmail(email);
+      if (!userExistsInAuth) {
+        return res.status(404).json({ error: "Usuário não encontrado." });
+      }
+
+      const resetPasswordLink = await auth.generatePasswordResetLink(email);
+
+      console.log("Link de redefinição gerado:", resetPasswordLink);
+
+      return res.status(200).json({
+        message: "Link de redefinição de senha gerado com sucesso!",
+        resetPasswordLink,
+      });
+    } catch (error) {
+      console.log("Erro ao gerar link de redefinição de senha:", error);
+      return res
+        .status(500)
+        .json({ error: "Erro ao gerar link de redefinição de senha." });
+    }
+  }
 }
 
 export default new UserController();
