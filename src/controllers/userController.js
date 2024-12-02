@@ -50,7 +50,45 @@ class UserController {
     }
   }
   // login
-  async login(req, res) {}
+  async login(req, res) {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ error: "E-mail e senha são obrigatórios!" });
+    }
+
+    try {
+      const userQueryResult = await db
+        .collection("users")
+        .where("email", "==", email)
+        .get();
+
+      if (userQueryResult.empty) {
+        return res.status(404).json({ error: "Usuário não encontrado." });
+      }
+
+      // Pega os dados do primeiro usuário encontrado
+      const userDoc = userQueryResult.docs[0];
+      const user = userDoc.data();
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: "Senha incorreta." });
+      }
+      return res.status(200).json({
+        message: "Login realizado com sucesso!",
+        user: {
+          id: userDoc.id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({ error: "Usuário não encontrado!" });
+    }
+  }
 
   // change password
   async forgotPassword(req, res) {}
