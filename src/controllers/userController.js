@@ -1,6 +1,7 @@
 import { db, auth } from "../../firebaseConfig.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
+import nodemailer from "nodemailer";
 
 dotenv.config();
 
@@ -115,14 +116,28 @@ class UserController {
 
       const resetPasswordLink = await auth.generatePasswordResetLink(email);
 
-      console.log("Link de redefinição gerado:", resetPasswordLink);
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.USER_EMAIL, // Seu e-mail
+          pass: process.env.USER_PASSWORD, // Sua senha ou senha de app
+        },
+      });
+
+      const message = {
+        to: email,
+        subject: "Redefinição de senha",
+        text: `Clique no link para redefinir sua senha: ${resetPasswordLink}`,
+        html: `<p>Clique no link para redefinir sua senha:</p> <a href="${resetPasswordLink}">Redefinir senha</a>`,
+      };
+
+      await transporter.sendMail(message);
 
       return res.status(200).json({
         message: "Link de redefinição de senha gerado com sucesso!",
-        resetPasswordLink,
       });
     } catch (error) {
-      console.log("Erro ao gerar link de redefinição de senha:", error);
+      console.log(error);
       return res
         .status(500)
         .json({ error: "Erro ao gerar link de redefinição de senha." });
