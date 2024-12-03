@@ -119,14 +119,14 @@ class UserController {
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
-          user: process.env.USER_EMAIL, // Seu e-mail
-          pass: process.env.USER_PASSWORD, // Sua senha ou senha de app
+          user: process.env.USER_EMAIL,
+          pass: process.env.USER_PASSWORD,
         },
       });
 
       const message = {
         to: email,
-        subject: "Redefinição de senha",
+        subject: "Redefinição de senha - To Do List",
         text: `Clique no link para redefinir sua senha: ${resetPasswordLink}`,
         html: `<p>Clique no link para redefinir sua senha:</p> <a href="${resetPasswordLink}">Redefinir senha</a>`,
       };

@@ -3,10 +3,8 @@ import userRoutes from "./userRoutes.js";
 
 const routes = Router();
 
-routes.use('/user', userRoutes);
+routes.use("/user", userRoutes);
 
-routes.get("/", (req, res) => {
-  res.send("Opa");
-});
+routes.get("/");
 
 export default routes;
