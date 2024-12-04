@@ -5,6 +5,8 @@ const routes = Router();
 
 routes.use("/user", userRoutes);
 
-routes.get("/");
+routes.get("/", (req, res) => {
+    res.send("")
+});
 
 export default routes;
