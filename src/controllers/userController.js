@@ -93,11 +93,12 @@ class UserController {
     }
   }
 
+  // verify token
   async verifyToken(idToken) {
     try {
       const decodedToken = await admin.auth().verifyIdToken(idToken);
       const uid = decodedToken.uid;
-      return uid; // Retorna o UID do usuário autenticado
+      return uid;
     } catch (error) {
       throw new Error("Token inválido");
     }
