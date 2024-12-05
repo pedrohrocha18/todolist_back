@@ -28,5 +28,5 @@ app.use(
 app.use(routes);
 
 app.listen(PORT, () => {
-  console.log(`http://localhost:${PORT}`);
+  console.log(`Server is running at http://localhost:${PORT}`);
 });
