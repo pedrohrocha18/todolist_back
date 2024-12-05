@@ -13,7 +13,7 @@ dotenv.config();
 //   allowedHeaders: ['Content-Type', 'Authorization'],
 // };
 
-app.use(cors);
+app.use(cors());
 
 const PORT = process.env.SERVER_PORT || 3001;
 
