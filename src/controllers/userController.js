@@ -1,5 +1,4 @@
 import { db, auth } from "../../firebaseConfig.js";
-import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import nodemailer from "nodemailer";
 
@@ -16,16 +15,10 @@ class UserController {
         .json({ error: "Todos os campos são obrigatórios." });
     }
 
-    // Verifica se já existe usuário com o e-mail fornecido
-    const userExists = await db
-      .collection("users")
-      .where("email", "==", email)
-      .get();
-    if (!userExists.empty) {
-      return res.status(400).json({ error: "O e-mail já está em uso." });
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      return res.status(400).json({ error: "E-mail inválido." });
     }
 
-    // Verificador de senha
     if (
       !password.match(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
@@ -38,68 +31,78 @@ class UserController {
     }
 
     try {
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      const userRecord = await auth.createUser({
-        email,
-        password: hashedPassword,
-      });
-
-      await db.collection("users").add({
-        name,
-        email,
-        password: hashedPassword,
-        firebaseUid: userRecord.uid,
-      });
-
-      return res
-        .status(200)
-        .json({ message: "Usuário adicionado com sucesso!" });
-    } catch (error) {
-      console.error("Erro ao adicionar usuário:", error);
-      return res.status(500).json({ error: "Erro ao adicionar usuário!" });
-    }
-  }
-  // login
-  async login(req, res) {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      return res
-        .status(400)
-        .json({ error: "E-mail e senha são obrigatórios!" });
-    }
-
-    try {
-      const userQueryResult = await db
+      const userExists = await db
         .collection("users")
         .where("email", "==", email)
         .get();
 
-      if (userQueryResult.empty) {
+      if (!userExists.empty) {
+        return res.status(400).json({ error: "O e-mail já está em uso." });
+      }
+
+      const userRecord = await auth.createUser({
+        email,
+        password,
+      });
+
+      await db.collection("users").doc(userRecord.uid).set({
+        name,
+        email,
+      });
+
+      return res
+        .status(201)
+        .json({ message: "Usuário adicionado com sucesso!" });
+    } catch (error) {
+      console.error("Erro ao adicionar usuário:", error.message, error.stack);
+      if (error.code === "auth/email-already-in-use") {
+        return res.status(400).json({ error: "O e-mail já está em uso." });
+      }
+      return res.status(500).json({ error: "Erro ao adicionar usuário!" });
+    }
+  }
+
+  // login
+  async login(req, res) {
+    const { token } = req.body;
+
+
+    if (!token) {
+      return res.status(400).json({ error: "Token de autenticação é necessário!" });
+    }
+
+    try {
+      // Verifica o token usando o Firebase Admin SDK
+      const decodedToken = await auth.verifyIdToken(token);
+      const uid = decodedToken.uid;
+
+      // Você pode adicionar mais verificações, como verificar se o e-mail corresponde ao uid, etc.
+      const user = await db.collection("users").doc(uid).get();
+
+      if (!user.exists) {
         return res.status(404).json({ error: "Usuário não encontrado." });
       }
 
-      // Pega os dados do primeiro usuário encontrado
-      const userDoc = userQueryResult.docs[0];
-      const user = userDoc.data();
-
-      const isPasswordValid = await bcrypt.compare(password, user.password);
-      if (!isPasswordValid) {
-        return res.status(401).json({ error: "Senha incorreta." });
-      }
       return res.status(200).json({
-        message: "Login realizado com sucesso!",
-        user: {
-          id: userDoc.id,
-          name: user.name,
-          email: user.email,
-        },
+        message: "Login bem-sucedido!",
+        user: user.data(), // Enviar os dados do usuário ou outro necessário
       });
     } catch (error) {
-      return res.status(500).json({ error: "Usuário não encontrado!" });
+      console.error("Erro ao autenticar usuário:", error);
+      return res.status(500).json({ error: "Erro ao autenticar usuário!" });
     }
   }
+
+  async verifyToken(idToken) {
+    try {
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const uid = decodedToken.uid;
+      return uid; // Retorna o UID do usuário autenticado
+    } catch (error) {
+      throw new Error("Token inválido");
+    }
+  }
+
   // change password
   async forgotPassword(req, res) {
     const { email } = req.body;
@@ -137,7 +140,6 @@ class UserController {
         message: "Link de redefinição de senha gerado com sucesso!",
       });
     } catch (error) {
-      console.log(error);
       return res
         .status(500)
         .json({ error: "Erro ao gerar link de redefinição de senha." });
