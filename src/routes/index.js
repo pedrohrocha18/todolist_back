@@ -6,7 +6,7 @@ const routes = Router();
 routes.use("/user", userRoutes);
 
 routes.get("/", (req, res) => {
-  res.send("");
+  res.send("Welcome!");
 });
 
 export default routes;
