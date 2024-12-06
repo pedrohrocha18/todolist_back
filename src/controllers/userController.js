@@ -16,7 +16,7 @@ class UserController {
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      return res.status(400).json({ error: "E-mail inválido." });
+      return res.status(422).json({ error: "E-mail inválido." });
     }
 
     if (
@@ -24,7 +24,7 @@ class UserController {
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/
       )
     ) {
-      return res.status(400).json({
+      return res.status(406).json({
         error:
           "A senha deve conter pelo menos 8 caracteres, incluindo letras maiúsculas, minúsculas, números e caracteres especiais.",
       });
