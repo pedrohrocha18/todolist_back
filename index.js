@@ -7,7 +7,7 @@ const app = express();
 
 dotenv.config();
 
-// const PORT = process.env.SERVER_PORT || 3001;
+const PORT = process.env.SERVER_PORT || 3001;
 
 const corsOptions = {
   origin: "https://todolist-interface.vercel.app",
@@ -27,8 +27,6 @@ app.use(
 
 app.use(routes);
 
-// app.listen(PORT, () => {
-//   console.log(`Server is running at http://localhost:${PORT}`);
-// });
-
-export default app;
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});
