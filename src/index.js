@@ -1,12 +1,12 @@
 import { Router } from "express";
-import userRoutes from "./userRoutes.js";
+import userRoutes from "./routes/userRoutes";
 
 const routes = Router();
 
 routes.use("/user", userRoutes);
 
 routes.get("/", (req, res) => {
-    res.send("opa")
+  res.send("opa");
 });
 
 export default routes;
