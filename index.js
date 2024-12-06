@@ -1,7 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import routes from "./src/routes/index.js";
+import routes from "./src/index.js";
 
 const app = express();
 
@@ -27,6 +27,8 @@ app.use(
 
 app.use(routes);
 
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//   console.log(`Server is running at http://localhost:${PORT}`);
+// });
+
+export default app;
