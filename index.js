@@ -7,13 +7,13 @@ const app = express();
 
 dotenv.config();
 
-// const corsOptions = {
-//   origin: 'http://localhost:5173',
-//   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-//   allowedHeaders: ['Content-Type', 'Authorization'],
-// };
+const corsOptions = {
+  origin: "https://todolist-interface.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-app.use(cors());
+app.use(cors(corsOptions));
 
 const PORT = process.env.SERVER_PORT || 3001;
 
