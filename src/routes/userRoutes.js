@@ -5,6 +5,7 @@ const userRoutes = Router();
 
 userRoutes.post("/register", userController.register);
 userRoutes.post("/login", userController.login);
+userRoutes.post("/exists", userController.exists);
 userRoutes.post("/forgotpassword", userController.forgotPassword);
 
 export default userRoutes;

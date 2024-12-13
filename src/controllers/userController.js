@@ -37,7 +37,7 @@ class UserController {
         .get();
 
       if (!userExists.empty) {
-        return res.status(400).json({ error: "O e-mail já está em uso." });
+        return res.status(409).json({ error: "O e-mail já está em uso." });
       }
 
       const userRecord = await auth.createUser({
@@ -66,17 +66,16 @@ class UserController {
   async login(req, res) {
     const { token } = req.body;
 
-
     if (!token) {
-      return res.status(400).json({ error: "Token de autenticação é necessário!" });
+      return res
+        .status(400)
+        .json({ error: "Token de autenticação é necessário!" });
     }
 
     try {
-      // Verifica o token usando o Firebase Admin SDK
       const decodedToken = await auth.verifyIdToken(token);
       const uid = decodedToken.uid;
 
-      // Você pode adicionar mais verificações, como verificar se o e-mail corresponde ao uid, etc.
       const user = await db.collection("users").doc(uid).get();
 
       if (!user.exists) {
@@ -85,7 +84,7 @@ class UserController {
 
       return res.status(200).json({
         message: "Login bem-sucedido!",
-        user: user.data(), // Enviar os dados do usuário ou outro necessário
+        user: user.data(),
       });
     } catch (error) {
       console.error("Erro ao autenticar usuário:", error);
@@ -101,6 +100,35 @@ class UserController {
       return uid;
     } catch (error) {
       throw new Error("Token inválido");
+    }
+  }
+
+  // user exists
+  async exists(req, res) {
+    const { email } = req.body;
+
+    try {
+      // Busca o usuário no banco de dados usando o e-mail
+      const userSnapshot = await db
+        .collection("users")
+        .where("email", "==", email)
+        .get();
+
+      // Verifica se o usuário foi encontrado
+      if (userSnapshot.empty) {
+        return res.status(404).json({ error: "Usuário não encontrado." });
+      }
+
+      // Caso o usuário exista, retorna sucesso ou algum dado relevante
+      return res.status(200).json({ message: "Usuário encontrado." });
+    } catch (error) {
+      // Em caso de erro no banco ou outra falha, retorna um erro genérico
+      console.error("Erro ao verificar usuário:", error);
+      return res
+        .status(500)
+        .json({
+          error: "Erro ao verificar usuário. Tente novamente mais tarde.",
+        });
     }
   }
 
@@ -146,6 +174,7 @@ class UserController {
         .json({ error: "Erro ao gerar link de redefinição de senha." });
     }
   }
+
 }
 
 export default new UserController();
